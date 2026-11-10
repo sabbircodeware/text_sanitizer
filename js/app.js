@@ -9,7 +9,7 @@
     constructor() {
       this.editingWordId = null;
       this.deletingWordId = null;
-      this.searchHasRun = false;
+      this.searchHasRun = true; // always highlight risky content as the user types
       this.translationEngine = null;
       this.translationSourceText = '';
       this.showingTranslation = false;
@@ -37,6 +37,7 @@
       this.renderDocumentTabs();
       this.dom.inputText.value = this.getActiveDocument().text;
       this.handleSanitize();
+      this.searchRestrictedWords(false);
       this.updateInputCounters();
       this.updateOutputCounters();
 
@@ -90,6 +91,7 @@
         findRestrictedBtn: document.getElementById('findRestrictedBtn'),
         searchResultCount: document.getElementById('searchResultCount'),
         inputHighlightLayer: document.getElementById('inputHighlightLayer'),
+        outputHighlightLayer: document.getElementById('outputHighlightLayer'),
 
         // Risk summary
         riskMeter: document.getElementById('riskMeter'),
@@ -406,9 +408,13 @@
         });
         this.dom.inputText.addEventListener('scroll', () => this.syncHighlightScroll());
       }
+      if (this.dom.outputText) {
+        this.dom.outputText.addEventListener('scroll', () => this.syncOutputHighlightScroll());
+      }
 
       if (this.dom.outputText) {
         this.dom.outputText.addEventListener('input', () => {
+          this.clearOutputHighlights(); // manual edit makes the replacement positions stale
           this.updateOutputCounters();
         });
       }
@@ -803,11 +809,47 @@
       this.dom.inputHighlightLayer.scrollLeft = this.dom.inputText.scrollLeft;
     }
 
+    renderOutputHighlights(segments) {
+      const layer = this.dom.outputHighlightLayer;
+      if (!layer) return;
+      layer.replaceChildren();
+
+      const hasReplacements = Array.isArray(segments) && segments.some(segment => segment.replaced);
+      layer.parentElement.classList.toggle('output-highlight-active', hasReplacements);
+      if (!hasReplacements) return;
+
+      const fragment = document.createDocumentFragment();
+      segments.forEach(({ text, replaced }) => {
+        if (!replaced) {
+          fragment.appendChild(document.createTextNode(text));
+          return;
+        }
+        const mark = document.createElement('mark');
+        mark.className = 'output-replaced';
+        mark.title = 'Replaced by sanitizer';
+        mark.textContent = text;
+        fragment.appendChild(mark);
+      });
+      layer.appendChild(fragment);
+      this.syncOutputHighlightScroll();
+    }
+
+    clearOutputHighlights() {
+      this.renderOutputHighlights([]);
+    }
+
+    syncOutputHighlightScroll() {
+      if (!this.dom.outputText || !this.dom.outputHighlightLayer) return;
+      this.dom.outputHighlightLayer.scrollTop = this.dom.outputText.scrollTop;
+      this.dom.outputHighlightLayer.scrollLeft = this.dom.outputText.scrollLeft;
+    }
+
     handleSanitize() {
       const rawText = this.dom.inputText ? this.dom.inputText.value : '';
 
       if (!rawText.trim()) {
         if (this.dom.outputText) this.dom.outputText.value = '';
+        this.clearOutputHighlights();
         this.updateTranslationSource('');
         this.updateOutputCounters();
         this.updateSanitizationStats('', '', {});
@@ -817,11 +859,12 @@
       const words = window.WordManager.getAllWords();
       const settings = window.Settings.get();
 
-      const { sanitizedText, stats } = window.Sanitizer.sanitize(rawText, words, settings);
+      const { sanitizedText, stats, segments } = window.Sanitizer.sanitize(rawText, words, settings);
 
       if (this.dom.outputText) {
         this.dom.outputText.value = sanitizedText;
       }
+      this.renderOutputHighlights(segments);
 
       this.updateTranslationSource(sanitizedText);
       this.updateOutputCounters();
@@ -1126,6 +1169,7 @@
     handleClearResult(showNotification = true) {
       if (this.dom.outputText) {
         this.dom.outputText.value = '';
+        this.clearOutputHighlights();
         this.updateTranslationSource('');
         this.updateOutputCounters();
         this.updateSanitizationStats('', '', {});
@@ -1421,7 +1465,14 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      await window.DefaultWords.load();
+    } catch (error) {
+      console.error('Default word list failed to load:', error);
+      alert('Could not load the default word list (data/defaultWords.json).');
+      return;
+    }
     const app = new App();
     app.init();
   });

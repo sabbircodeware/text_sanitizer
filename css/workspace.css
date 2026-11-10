@@ -450,10 +450,11 @@ body {
 }
 
 .editor-grid .input-highlight-layer mark {
-  color: #7a3d00;
-  background: #ffe08a;
+  color: #d32f2f;
+  background: #ffe3e3;
+  font-weight: 600;
   border-radius: 3px;
-  box-shadow: 0 0 0 1px rgba(218, 154, 28, 0.18);
+  box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.25);
 }
 
 .editor-grid .input-highlight-layer mark.risk-email,
@@ -488,6 +489,35 @@ body {
 .editor-grid .textarea-group.search-highlight-active .app-textarea::selection {
   color: transparent;
   background: rgba(15, 157, 108, 0.2);
+}
+
+/* Sanitized output: replaced (Fiverr-restricted) parts shown in red */
+.editor-grid .output-highlight-layer mark.output-replaced {
+  color: #d32f2f;
+  background: #ffe3e3;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.25);
+}
+
+.editor-grid .textarea-group.output-highlight-active .output-highlight-layer {
+  display: block;
+}
+
+.editor-grid .textarea-group.output-highlight-active #outputText {
+  color: transparent;
+  background: transparent;
+  caret-color: var(--text-main);
+}
+
+.editor-grid .textarea-group.output-highlight-active #outputText::selection {
+  color: transparent;
+  background: rgba(15, 157, 108, 0.2);
+}
+
+/* Bengali translation view hides the English layer's textarea; keep layer out of the way */
+.editor-grid .textarea-group.output-highlight-active #outputText[hidden] ~ .output-highlight-layer,
+.editor-grid .textarea-group.output-highlight-active .output-highlight-layer:has(~ #outputText[hidden]) {
+  display: none;
 }
 
 .search-result-count {
@@ -963,6 +993,13 @@ body {
   border-color: #f8cccc;
 }
 
+.category-abuse {
+  color: #be123c;
+  background: #ffe4ec;
+  border-color: #fbc2d3;
+}
+
+[data-theme="dark"] .category-abuse { color: #fda4af; background: rgba(244, 63, 94, 0.13); border-color: rgba(244, 63, 94, 0.25); }
 [data-theme="dark"] .category-contact { color: #7dd3fc; background: rgba(14, 165, 233, 0.13); border-color: rgba(14, 165, 233, 0.25); }
 [data-theme="dark"] .category-payment { color: #fcd34d; background: rgba(245, 158, 11, 0.13); border-color: rgba(245, 158, 11, 0.25); }
 [data-theme="dark"] .category-platform { color: #c4b5fd; background: rgba(139, 92, 246, 0.13); border-color: rgba(139, 92, 246, 0.25); }

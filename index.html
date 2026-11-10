@@ -131,7 +131,8 @@
               </div>
             </div>
           </div>
-          <textarea id="outputText" class="app-textarea" placeholder="Your cleaned, Fiverr-safe message will appear here..."></textarea>
+          <div id="outputHighlightLayer" class="input-highlight-layer output-highlight-layer" aria-hidden="true"></div>
+          <textarea id="outputText" class="app-textarea"placeholder="Your cleaned, Fiverr-safe message will appear here..."></textarea>
           <textarea id="translatedOutputText" class="app-textarea translated-output" placeholder="বাংলা অনুবাদ এখানে দেখা যাবে..." readonly hidden aria-label="Sanitized output Bengali translation"></textarea>
           <div id="riskMeter" class="risk-meter output-risk-meter" data-level="clean" role="status" aria-live="polite">
             <span class="risk-dot" aria-hidden="true"></span>
@@ -439,6 +440,7 @@
   </div>
 
   <!-- Application Scripts (Loaded in dependency order for file:// and http:// compatibility) -->
+  <script src="data/defaultWords.js"></script>
   <script src="js/defaultWords.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/theme.js"></script>

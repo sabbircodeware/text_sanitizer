@@ -204,9 +204,27 @@
       const uniqueMatchesSet = new Set();
       const matchedList = [];
 
+      // Output split into plain / replaced pieces so the UI can show replacements in red.
+      const segments = [];
+      let segmentCursor = 0;
+
       const sanitizedText = text.replace(matcher.regex, (...args) => {
         const match = args[0];
         const groups = args[args.length - 1];
+        const offset = args[args.length - 3];
+        const replacement = replaceMatch(match, groups);
+        if (offset > segmentCursor) {
+          segments.push({ text: text.slice(segmentCursor, offset), replaced: false });
+        }
+        segments.push({ text: replacement, replaced: true });
+        segmentCursor = offset + match.length;
+        return replacement;
+      });
+      if (segmentCursor < text.length) {
+        segments.push({ text: text.slice(segmentCursor), replaced: false });
+      }
+
+      function replaceMatch(match, groups) {
         let type = 'word';
 
         if (groups && typeof groups === 'object') {
@@ -250,10 +268,11 @@
         }
 
         return baseReplacement;
-      });
+      }
 
       return {
         sanitizedText,
+        segments,
         stats: {
           detectedCount,
           replacementCount,
